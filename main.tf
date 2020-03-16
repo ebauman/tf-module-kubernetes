@@ -17,11 +17,13 @@ provider "kubernetes" {
 
 locals {
   pod_id = "${var.name}"
+  namespace = "${file("/var/run/secrets/kubernetes.io/serviceaccount/namespace")}"
 }
 
 resource "kubernetes_secret" "public-key-secret" {
   metadata {
     name = "pod-${local.pod_id}-secret"
+    namespace = "${local.namespace}"
     labels = {
       "field.hobbyfarm.io/pod" = "${local.pod_id}"
     }
@@ -35,7 +37,7 @@ resource "kubernetes_secret" "public-key-secret" {
 resource "kubernetes_pod" "pod" {
   metadata {
     name = "pod-${var.name}"
-
+    namespace = "${local.namespace}"
     labels = {
       "field.hobbyfarm.io/pod" = "${local.pod_id}"
     }
@@ -74,6 +76,7 @@ resource "kubernetes_pod" "pod" {
 resource "kubernetes_service" "pod-service" {
   metadata {
     name = "service-${local.pod_id}"
+    namespace = "${local.namespace}"
   }
 
   spec {
