@@ -21,7 +21,7 @@ locals {
 
 resource "kubernetes_secret" "public-key-secret" {
   metadata {
-    name = "${local.pod_id}-secret"
+    name = "pod-${local.pod_id}-secret"
     labels = {
       "field.hobbyfarm.io/pod" = "${local.pod_id}"
     }
@@ -34,7 +34,11 @@ resource "kubernetes_secret" "public-key-secret" {
 
 resource "kubernetes_pod" "pod" {
   metadata {
-    name = "${var.name}"
+    name = "pod-${var.name}"
+
+    labels = {
+      "field.hobbyfarm.io/pod" = "${local.pod_id}"
+    }
   }
 
   spec {
@@ -73,6 +77,9 @@ resource "kubernetes_service" "pod-service" {
   }
 
   spec {
+    selector {
+      "field.hobbyfarm.io/pod" = "${local.pod_id}"
+    }
 
     port {
       port = 22
