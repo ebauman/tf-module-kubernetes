@@ -8,6 +8,10 @@ variable "public_key" {
   type = "string"
 }
 
+provider "kubernetes" {
+  load_config_file = "false"
+}
+
 locals {
   pod_id = "${var.name}"
 }
