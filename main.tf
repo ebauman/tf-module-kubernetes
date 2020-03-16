@@ -1,36 +1,39 @@
-variable "image" {}
-variable "name" {}
-variable "public_key" {}
+variable "image" {
+  type = "string"
+}
+variable "name" {
+  type = "string"
+}
+variable "public_key" {
+  type = "string"
+}
 
-resource "random_id" "pod" {
-  byte_length = 8
+locals {
+  pod_id = "${var.name}"
 }
 
 resource "kubernetes_secret" "public-key-secret" {
   metadata {
-    name = "${var.name}-${random_id.pod.hex}-secret"
+    name = "${local.pod_id}-secret"
     labels = {
-      "pod.hobbyfarm.io/name" = "${var.name}-${random_id.pod.hex}"
+      "field.hobbyfarm.io/pod" = "${local.pod_id}"
     }
   }
 
   data = {
-    public_key = var.public_key
+    public_key = "${var.public_key}"
   }
 }
 
 resource "kubernetes_pod" "pod" {
   metadata {
-    name = "${var.name}-${random_id.pod.hex}"
-    labels = {
-      "pod.hobbyfarm.io/name" = "${var.name}-${random_id.pod.hex}" 
-    }
+    name = "${var.name}"
   }
 
   spec {
     container {
-      image = var.image
-      name = var.name
+      image = "${var.image}"
+      name = "${var.name}"
       stdin = true
       tty = true
       port {
@@ -47,7 +50,7 @@ resource "kubernetes_pod" "pod" {
     volume {
       name = "ssh-secret"
       secret {
-        secret_name = kubernetes_secret.public-key-secret.metadata[0].name
+        secret_name = "${kubernetes_secret.public-key-secret.metadata.0.name}"
         items {
           key = "public_key"
           path = "authorized_keys"
@@ -59,13 +62,10 @@ resource "kubernetes_pod" "pod" {
 
 resource "kubernetes_service" "pod-service" {
   metadata {
-    generate_name = "${var.name}-${random_id.pod.hex}-service"
+    generate_name = "${local.pod_id}-service"
   }
 
   spec {
-    selector = {
-      "pod.hobbyfarm.io/name" = "${var.name}-${random_id.pod.hex}"
-    }
 
     port {
       port = 22
@@ -76,14 +76,15 @@ resource "kubernetes_service" "pod-service" {
 
   }
 }
+
 output "private_ip" {
-  value = kubernetes_service.pod-service.spec[0].cluster_ip
+  value = "${kubernetes_service.pod-service.spec.0.cluster_ip}"
 }
 
 output "public_ip" {
-  value = kubernetes_service.pod-service.spec[0].cluster_ip
+  value = "${kubernetes_service.pod-service.spec.0.cluster_ip}"
 }
 
 output "hostname" {
-  value = kubernetes_service.pod-service.spec[0].cluster_ip
+  value = "${kubernetes_service.pod-service.spec.0.cluster_ip}"
 }
