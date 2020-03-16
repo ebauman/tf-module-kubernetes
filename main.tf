@@ -9,6 +9,7 @@ variable "public_key" {
 }
 
 provider "kubernetes" {
+  load_config_file = false
   host     = "https://10.43.0.1"
   token    = "${file("/var/run/secrets/kubernetes.io/serviceaccount/token")}"
 }
