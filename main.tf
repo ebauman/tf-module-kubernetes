@@ -69,7 +69,7 @@ resource "kubernetes_pod" "pod" {
 
 resource "kubernetes_service" "pod-service" {
   metadata {
-    name = "${local.pod_id}-service"
+    name = "service-${local.pod_id}"
   }
 
   spec {
